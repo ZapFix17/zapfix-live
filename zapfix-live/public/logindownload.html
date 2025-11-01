@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZAPFIX Tools - Admin Login</title>
+  <title>ZAPFIX - Admin Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -108,12 +108,25 @@
     .login-btn:disabled {
       background: #0084a8;
       cursor: not-allowed;
+      opacity: 0.7;
     }
 
     .error-message {
       background: rgba(255, 100, 100, 0.2);
       border: 1px solid rgba(255, 100, 100, 0.5);
       color: #ff6464;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .success-message {
+      background: rgba(100, 255, 100, 0.2);
+      border: 1px solid rgba(100, 255, 100, 0.5);
+      color: #64ff64;
       padding: 12px;
       border-radius: 6px;
       margin-bottom: 1rem;
@@ -161,6 +174,7 @@
     <h1 class="login-title">Admin Login</h1>
 
     <div id="errorMessage" class="error-message"></div>
+    <div id="successMessage" class="success-message"></div>
 
     <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="form-group">
@@ -177,43 +191,79 @@
     </form>
 
     <div class="back-link">
-      <a href="download.html">← Back to Tools</a>
+      <a href="feed.html">← Back to Home</a>
     </div>
   </div>
 
   <script>
-    const BACKEND_URL = '';  // Empty for Render (same domain)
+    // FIXED: Correct backend URL - Change this to your actual backend
+    const BACKEND_URL = 'https://zapfix-backend-f8km.onrender.com';
 
     async function handleLogin(event) {
       event.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
       const loginBtn = document.getElementById('loginBtn');
       const errorMessage = document.getElementById('errorMessage');
+      const successMessage = document.getElementById('successMessage');
 
+      // Reset messages
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+
+      // Disable button
       loginBtn.disabled = true;
       loginBtn.textContent = 'Logging in...';
-      errorMessage.style.display = 'none';
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
+        console.log('🔐 Attempting login to:', `${BACKEND_URL}/admin/login`);
+        
+        // FIXED: Correct endpoint (no /api prefix)
+        const response = await fetch(`${BACKEND_URL}/admin/login`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        console.log('📡 Response status:', response.status);
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Login failed');
+        // Try to parse JSON
+        let data;
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          // If not JSON, read as text to see what we got
+          const text = await response.text();
+          console.error('❌ Response is not JSON:', text);
+          throw new Error('Server returned invalid response. Please check backend URL.');
         }
 
-        // Store JWT token
+        console.log('📦 Response data:', data);
+
+        if (!data.success) {
+          throw new Error(data.message || 'Login failed');
+        }
+
+        // Success! Store token
         localStorage.setItem('adminToken', data.token);
-        window.location.href = 'editdownload.html';
+        
+        successMessage.textContent = '✅ Login successful! Redirecting...';
+        successMessage.style.display = 'block';
+
+        // Redirect after short delay
+        setTimeout(() => {
+          window.location.href = 'admin.html';
+        }, 1000);
+
       } catch (err) {
-        errorMessage.textContent = err.message;
+        console.error('❌ Login error:', err);
+        errorMessage.textContent = err.message || 'Login failed. Please try again.';
         errorMessage.style.display = 'block';
+        
         loginBtn.disabled = false;
         loginBtn.textContent = 'Login';
       }
@@ -221,7 +271,8 @@
 
     // Check if already logged in
     if (localStorage.getItem('adminToken')) {
-      window.location.href = 'editdownload.html';
+      console.log('✅ Already logged in, redirecting...');
+      window.location.href = 'admin.html';
     }
   </script>
 </body>
