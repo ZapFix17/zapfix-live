@@ -217,6 +217,8 @@
 
       try {
         console.log('🔐 Attempting login to:', `${BACKEND_URL}/admin/login`);
+        console.log('📧 Email:', email);
+        console.log('🔑 Password:', password ? '***' : 'empty');
         
         // FIXED: Correct endpoint (no /api prefix)
         const response = await fetch(`${BACKEND_URL}/admin/login`, {
@@ -228,21 +230,27 @@
         });
 
         console.log('📡 Response status:', response.status);
+        console.log('📡 Response ok:', response.ok);
+        console.log('📡 Response headers:', response.headers);
+
+        // Read response as text first to see what we got
+        const responseText = await response.text();
+        console.log('📄 Raw response:', responseText);
 
         // Try to parse JSON
         let data;
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          // If not JSON, read as text to see what we got
-          const text = await response.text();
-          console.error('❌ Response is not JSON:', text);
-          throw new Error('Server returned invalid response. Please check backend URL.');
+        if (!responseText) {
+          throw new Error('Backend returned empty response. Check if backend is running.');
         }
 
-        console.log('📦 Response data:', data);
+        try {
+          data = JSON.parse(responseText);
+          console.log('📦 Parsed data:', data);
+        } catch (parseError) {
+          console.error('❌ Failed to parse JSON:', parseError);
+          console.error('❌ Response text:', responseText);
+          throw new Error('Server returned invalid JSON. Response: ' + responseText.substring(0, 100));
+        }
 
         if (!data.success) {
           throw new Error(data.message || 'Login failed');
