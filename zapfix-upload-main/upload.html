@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Upload Video - ZapFix</title>
+<style>
+  body { font-family:'Poppins',sans-serif; background:#E0F3FF; margin:0; padding:0; color:#333; }
+  header { background:white; padding:15px 25px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.1); position:sticky; top:0; }
+  .logo { font-size:26px; font-weight:700; color:#0077ff; cursor:pointer; }
+  .back-btn { background:#0077ff; color:white; border:none; padding:8px 16px; border-radius:10px; cursor:pointer; font-size:14px; }
+  .container { max-width:500px; margin:40px auto; background:white; padding:30px; border-radius:18px; box-shadow:0 6px 20px rgba(0,0,0,0.1); }
+  h2 { text-align:center; color:#0077ff; margin-bottom:20px; }
+  label { display:block; margin-top:15px; font-weight:600; color:#444; }
+  input[type="text"], textarea { width:100%; padding:10px; margin-top:6px; border:1.5px solid #ccc; border-radius:10px; outline:none; resize:none; }
+  input[type="file"] { display:none; }
+  .file-label { background:#0077ff; color:white; display:inline-block; padding:10px 15px; border-radius:10px; margin-top:8px; cursor:pointer; font-size:14px; transition:0.3s; }
+  .file-label:hover { background:#005cd1; }
+  .preview { margin-top:15px; text-align:center; }
+  .preview img, .preview video { width:300px; height:190px; border-radius:12px; object-fit:cover; border:1px solid #ccc; }
+  button.upload-btn { width:100%; background:#00b894; color:white; padding:12px; font-size:16px; border:none; border-radius:12px; margin-top:25px; cursor:pointer; transition:background 0.3s; }
+  button.upload-btn:hover { background:#01996b; }
+  .status { text-align:center; margin-top:15px; color:#0077ff; font-weight:500; }
+  @media(max-width:600px){ .container{margin:20px;padding:20px;} .preview img,.preview video{width:100%;height:auto;} }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" onclick="location.href='feed.html'">ZAPFIX</div>
+  <button class="back-btn" onclick="location.href='feed.html'">← Back</button>
+</header>
+
+<div class="container">
+  <h2>Upload Video</h2>
+
+  <label>Title</label>
+  <input type="text" id="title" placeholder="Enter video title">
+
+  <label>Description</label>
+  <textarea id="description" rows="3" placeholder="Enter video description"></textarea>
+
+  <label>Thumbnail</label>
+  <label class="file-label" for="thumbnail">Choose Thumbnail</label>
+  <input type="file" id="thumbnail" accept="image/*">
+  <div class="preview" id="thumbPreview"></div>
+
+  <label>Video</label>
+  <label class="file-label" for="video">Choose Video</label>
+  <input type="file" id="video" accept="video/*">
+  <div class="preview" id="videoPreview"></div>
+
+  <button class="upload-btn" id="uploadBtn">Upload</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const BACKEND_URL = "https://zapfix-backend-f8km.onrender.com"; // <<-- set your Render URL here if different
+
+const thumbInput = document.getElementById("thumbnail");
+const videoInput = document.getElementById("video");
+const thumbPreview = document.getElementById("thumbPreview");
+const videoPreview = document.getElementById("videoPreview");
+const uploadBtn = document.getElementById("uploadBtn");
+const status = document.getElementById("status");
+
+// Thumbnail preview
+thumbInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => (thumbPreview.innerHTML = `<img src="${reader.result}" alt="Thumbnail Preview">`);
+    reader.readAsDataURL(file);
+  }
+});
+
+// Video preview
+videoInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => (videoPreview.innerHTML = `<video src="${reader.result}" controls></video>`);
+    reader.readAsDataURL(file);
+  }
+});
+
+// Upload to backend
+uploadBtn.addEventListener("click", async () => {
+  const title = document.getElementById("title").value.trim();
+  const description = document.getElementById("description").value.trim();
+  const thumbFile = thumbInput.files[0];
+  const videoFile = videoInput.files[0];
+
+  if (!title || !description || !thumbFile || !videoFile) {
+    alert("Please fill all fields and select both files!");
+    return;
+  }
+
+  status.textContent = "⏳ Uploading... (this can take a while for large files)";
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("thumbnail", thumbFile);
+  formData.append("video", videoFile);
+
+  try {
+    const res = await fetch(BACKEND_URL + "/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      console.error("Upload failed server response:", data);
+      status.textContent = "❌ Upload failed! " + (data.message || data.error || "Check backend or file size.");
+      return;
+    }
+
+    status.textContent = "✅ Upload complete — redirecting to feed...";
+    setTimeout(() => (location.href = "feed.html"), 1200);
+  } catch (err) {
+    console.error("Upload error:", err);
+    status.textContent = "❌ Upload failed! Check backend or file size.";
+  }
+});
+</script>
+</body>
+</html>
+

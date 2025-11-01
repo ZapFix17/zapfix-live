@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login - ZapFix</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-login-container">
+  <h2>Admin Login</h2>
+  <input type="text" id="adminEmail" placeholder="Email">
+  <input type="password" id="adminPassword" placeholder="Password">
+  <button id="loginBtn">Login</button>
+  <div id="loginStatus"></div>
+</div>
+
+<script>
+const loginBtn = document.getElementById('loginBtn');
+const loginStatus = document.getElementById('loginStatus');
+
+loginBtn.addEventListener('click', async () => {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value.trim();
+
+  if(!email || !password) return alert("Enter both email and password!");
+
+  try {
+    const res = await fetch("https://zapfix-backend-f8km.onrender.com/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if(data.success){
+      localStorage.setItem("adminToken", data.token);
+      window.location.href = "admin.html";
+    } else {
+      loginStatus.textContent = "❌ Invalid credentials";
+      loginStatus.style.color = "red";
+    }
+  } catch(err){
+    console.error(err);
+    loginStatus.textContent = "❌ Server error";
+  }
+});
+</script>
+</body>
+</html>
+

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - ZapFix</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<header>
+  <h2>Admin Dashboard</h2>
+  <button id="logoutBtn">Logout</button>
+</header>
+
+<main>
+  <div id="videosContainer"></div>
+</main>
+
+<script>
+const token = localStorage.getItem("adminToken");
+if(!token) window.location.href = "login.html";
+
+const logoutBtn = document.getElementById('logoutBtn');
+logoutBtn.addEventListener('click', () => {
+  localStorage.removeItem('adminToken');
+  window.location.href = "login.html";
+});
+
+const videosContainer = document.getElementById('videosContainer');
+
+async function fetchVideos(){
+  try {
+    const res = await fetch("https://zapfix-backend-f8km.onrender.com/admin/videos", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if(data.success){
+      renderVideos(data.videos);
+    } else {
+      videosContainer.innerHTML = "<p>No videos found</p>";
+    }
+  } catch(err){
+    console.error(err);
+    videosContainer.innerHTML = "<p>❌ Error connecting to backend</p>";
+  }
+}
+
+function renderVideos(videos){
+  videosContainer.innerHTML = "";
+  videos.forEach(video => {
+    const div = document.createElement('div');
+    div.className = "video-card-admin";
+    div.innerHTML = `
+      <img src="${video.thumbnail}" alt="thumb">
+      <div class="video-info">
+        <input type="text" class="titleInput" value="${video.title}">
+        <textarea class="descInput">${video.description}</textarea>
+        <input type="file" class="thumbInput">
+        <button class="updateBtn">Update</button>
+        <button class="deleteBtn">Delete Video</button>
+      </div>
+      <div class="comments-section">
+        <h4>Comments</h4>
+        <div class="commentsList"></div>
+      </div>
+    `;
+    videosContainer.appendChild(div);
+
+    const commentsListDiv = div.querySelector(".commentsList");
+    if(video.comments && video.comments.length > 0){
+      video.comments.forEach(c => {
+        const cdiv = document.createElement('div');
+        cdiv.className = "commentAdmin";
+        cdiv.innerHTML = `<strong>${c.name}</strong>: ${c.text} 
+          <button class="delCommentBtn" data-videoid="${video._id}" data-commentid="${c._id}">Delete</button>`;
+        commentsListDiv.appendChild(cdiv);
+      });
+    }
+
+    div.querySelector(".updateBtn").addEventListener('click', async () => {
+      const newTitle = div.querySelector(".titleInput").value.trim();
+      const newDesc = div.querySelector(".descInput").value.trim();
+      const thumbFile = div.querySelector(".thumbInput").files[0];
+
+      const formData = new FormData();
+      formData.append("title", newTitle);
+      formData.append("description", newDesc);
+      if(thumbFile) formData.append("thumbnail", thumbFile);
+
+      const res = await fetch(`https://zapfix-backend-f8km.onrender.com/admin/video/${video._id}`, {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      alert(data.success ? "Updated successfully!" : "Update failed!");
+      fetchVideos();
+    });
+
+    div.querySelector(".deleteBtn").addEventListener('click', async () => {
+      if(!confirm("Delete this video?")) return;
+      const res = await fetch(`https://zapfix-backend-f8km.onrender.com/admin/video/${video._id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      alert(data.success ? "Deleted!" : "Failed to delete!");
+      fetchVideos();
+    });
+
+    div.querySelectorAll(".delCommentBtn").forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const vid = btn.dataset.videoid;
+        const cid = btn.dataset.commentid;
+        const res = await fetch(`https://zapfix-backend-f8km.onrender.com/admin/video/${vid}/comment/${cid}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        alert(data.success ? "Comment deleted!" : "Failed to delete comment");
+        fetchVideos();
+      });
+    });
+  });
+}
+
+fetchVideos();
+</script>
+</body>
+</html>
+
+
