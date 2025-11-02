@@ -6,192 +6,38 @@
   <title>ZAPFIX - Download Tools</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: #0a0e27; color: #fff; min-height: 100vh; }
+    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #0a0e27;
-      color: #fff;
-      min-height: 100vh;
-    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+    .logo { font-size: 2rem; font-weight: 700; color: #00D9FF; text-shadow: 0 0 20px rgba(0, 217, 255, 0.5); }
+    .search-bar { flex: 1; max-width: 500px; }
+    .search-bar input { width: 100%; padding: 12px 20px; border: 2px solid #00D9FF; border-radius: 50px; background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; }
+    .search-bar input::placeholder { color: rgba(255,255,255,0.6); }
+    .admin-login { background: #00D9FF; color: #000; padding: 12px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
+    .admin-login:hover { background: #00b8cc; transform: translateY(-2px); }
+    .page-title { font-size: 1.8rem; color: #00D9FF; margin: 20px 0; text-align: center; font-weight: 600; }
 
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
+    .tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 10px 0; }
+    .tool-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,217,255,0.2); border-radius: 12px; overflow: hidden; transition: all 0.3s ease; cursor: pointer; }
+    .tool-card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,217,255,0.25); border-color: #00D9FF; }
+    .tool-thumbnail { width: 100%; height: 180px; object-fit: cover; background: #222; }
+    .tool-info { padding: 16px; }
+    .tool-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .tool-desc { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .tool-stats { display: flex; justify-content: space-between; font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+    .download-btn { background: #00D9FF; color: #000; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.3s; }
+    .download-btn:hover { background: #00b8cc; }
+    .loading, .no-tools { grid-column: 1/-1; text-align: center; padding: 40px; font-size: 1.1rem; color: rgba(255,255,255,0.6); }
 
-    /* HEADER */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .logo {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #00D9FF;
-      text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
-    }
-
-    .search-bar {
-      flex: 1;
-      max-width: 500px;
-      position: relative;
-    }
-
-    .search-bar input {
-      width: 100%;
-      padding: 12px 20px;
-      border: 2px solid #00D9FF;
-      border-radius: 50px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      font-size: 1rem;
-      outline: none;
-    }
-
-    .search-bar input::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .admin-login {
-      background: #00D9FF;
-      color: #000;
-      padding: 12px 24px;
-      border-radius: 50px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: 0.3s;
-    }
-
-    .admin-login:hover {
-      background: #00b8cc;
-      transform: translateY(-2px);
-    }
-
-    .page-title {
-      font-size: 1.8rem;
-      color: #00D9FF;
-      margin: 20px 0;
-      text-align: center;
-      font-weight: 600;
-    }
-
-    /* 4-COLUMN GRID */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
-      padding: 10px 0;
-    }
-
-    .tool-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(0, 217, 255, 0.2);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .tool-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0, 217, 255, 0.25);
-      border-color: #00D9FF;
-    }
-
-    .tool-thumbnail {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      background: #222;
-    }
-
-    .tool-info {
-      padding: 16px;
-    }
-
-    .tool-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #fff;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .tool-desc {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 12px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .tool-stats {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 10px;
-    }
-
-    .download-btn {
-      background: #00D9FF;
-      color: #000;
-      border: none;
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .download-btn:hover {
-      background: #00b8cc;
-    }
-
-    .loading, .no-tools {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 40px;
-      font-size: 1.1rem;
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 1400px) {
-      .tools-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (max-width: 992px) {
-      .tools-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 600px) {
-      .tools-grid { grid-template-columns: 1fr; }
-      .header { flex-direction: column; align-items: stretch; }
-      .search-bar { order: 2; margin-top: 15px; }
-    }
+    @media (max-width: 1400px) { .tools-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 992px) { .tools-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .tools-grid { grid-template-columns: 1fr; } .header { flex-direction: column; align-items: stretch; } .search-bar { order: 2; margin-top: 15px; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- HEADER -->
     <div class="header">
       <div class="logo">ZAPFIX</div>
       <div class="search-bar">
@@ -199,10 +45,7 @@
       </div>
       <a href="logindownload.html" class="admin-login">Admin Login</a>
     </div>
-
     <h1 class="page-title">Download Tools</h1>
-
-    <!-- GRID -->
     <div id="toolsGrid" class="tools-grid">
       <div class="loading">Loading tools...</div>
     </div>
@@ -210,7 +53,6 @@
 
   <script>
     let allTools = [];
-
     async function loadTools() {
       try {
         const response = await fetch('/api/tools');
@@ -218,22 +60,15 @@
         allTools = await response.json();
         renderTools(allTools);
       } catch (err) {
-        document.getElementById('toolsGrid').innerHTML = 
-          '<div class="no-tools">Failed to load tools.</div>';
+        document.getElementById('toolsGrid').innerHTML = '<div class="no-tools">Failed to load tools.</div>';
       }
     }
-
     function renderTools(tools) {
       const grid = document.getElementById('toolsGrid');
-      if (tools.length === 0) {
-        grid.innerHTML = '<div class="no-tools">No tools found.</div>';
-        return;
-      }
-
+      if (tools.length === 0) { grid.innerHTML = '<div class="no-tools">No tools found.</div>'; return; }
       grid.innerHTML = tools.map(tool => `
         <div class="tool-card" onclick="openTool('${tool._id}')">
-          <img src="${tool.thumbnail}" alt="${tool.name}" class="tool-thumbnail" 
-               onerror="this.src='https://via.placeholder.com/400x180/333/666?text=Tool'">
+          <img src="${tool.thumbnail}" alt="${tool.name}" class="tool-thumbnail" onerror="this.src='https://via.placeholder.com/400x180/333/666?text=Tool'">
           <div class="tool-info">
             <h3 class="tool-title">${escapeHtml(tool.name)}</h3>
             <p class="tool-desc">${escapeHtml(tool.description)}</p>
@@ -241,41 +76,19 @@
               <span>Likes ${tool.likes || 0}</span>
               <span>Comments ${tool.comments?.length || 0}</span>
             </div>
-            <button class="download-btn" onclick="event.stopPropagation(); downloadFile('${tool.file}', '${tool.name}')">
-              Download
-            </button>
+            <button class="download-btn" onclick="event.stopPropagation(); downloadFile('${tool.file}', '${tool.name}')">Download</button>
           </div>
         </div>
       `).join('');
     }
-
-    // SEARCH FUNCTION
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
-      const filtered = allTools.filter(tool => 
-        tool.name.toLowerCase().includes(query) || 
-        tool.description.toLowerCase().includes(query)
-      );
+      const filtered = allTools.filter(t => t.name.toLowerCase().includes(query) || t.description.toLowerCase().includes(query));
       renderTools(filtered);
     });
-
-    function openTool(id) {
-      window.location.href = `tool.html?id=${id}`;
-    }
-
-    function downloadFile(url, name) {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = name;
-      a.click();
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
+    function openTool(id) { window.location.href = `tool.html?id=${id}`; }
+    function downloadFile(url, name) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
+    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     loadTools();
   </script>
 </body>
