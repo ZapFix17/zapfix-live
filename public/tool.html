@@ -3,215 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZAPFIX Tools - Tool Details</title>
+  <title>ZAPFIX - Tool</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: #0a0e27; color: #fff; min-height: 100vh; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
-      color: #fff;
-      min-height: 100vh;
-      padding: 20px;
-    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+    .logo { font-size: 2rem; font-weight: 700; color: #00D9FF; text-shadow: 0 0 20px rgba(0,217,255,0.5); }
+    .back-btn { background: #00D9FF; color: #000; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: 0.3s; }
+    .back-btn:hover { background: #00b8cc; }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
+    .tool-container { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,217,255,0.2); border-radius: 16px; overflow: hidden; }
+    .tool-header { display: flex; gap: 20px; padding: 20px; flex-wrap: wrap; }
+    .tool-icon { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 2px solid #00D9FF; }
+    .tool-info { flex: 1; }
+    .tool-name { font-size: 1.8rem; font-weight: 700; color: #00D9FF; margin-bottom: 8px; }
+    .tool-desc { font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 15px; line-height: 1.6; }
 
-    .back-btn {
-      background: #00D9FF;
-      color: #0a0e27;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.3s ease;
-    }
+    .download-btn { background: #00D9FF; color: #000; border: none; padding: 14px 28px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+    .download-btn:hover { background: #00b8cc; transform: translateY(-2px); }
 
-    .back-btn:hover {
-      background: #00b8cc;
-      transform: translateY(-2px);
-    }
+    .like-section { display: flex; align-items: center; gap: 10px; margin: 20px 0; padding: 0 20px; }
+    .like-btn { background: transparent; border: 2px solid #00D9FF; color: #00D9FF; padding: 10px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .like-btn:hover, .like-btn.liked { background: #00D9FF; color: #000; }
+    .like-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #00D9FF;
-      letter-spacing: 1px;
-      text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-    }
+    .comments-section { padding: 20px; border-top: 1px solid rgba(0,217,255,0.3); }
+    .comments-title { font-size: 1.4rem; color: #00D9FF; margin-bottom: 15px; }
+    .comment-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .comment-input { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #00D9FF; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; }
+    .comment-input::placeholder { color: rgba(255,255,255,0.6); }
+    .submit-comment { background: #00D9FF; color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 
-    .tool-container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(0, 217, 255, 0.3);
-      border-radius: 12px;
-      padding: 2rem;
-    }
+    .comments-list { display: flex; flex-direction: column; gap: 15px; }
+    .comment { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,217,255,0.2); border-radius: 12px; padding: 15px; }
+    .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .comment-author { font-weight: 600; color: #00D9FF; }
+    .comment-time { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+    .comment-text { font-size: 0.95rem; color: rgba(255,255,255,0.9); line-height: 1.5; }
 
-    .tool-header {
-      display: flex;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
+    .no-comments { color: rgba(255,255,255,0.6); font-style: italic; text-align: center; padding: 20px; }
 
-    .tool-icon {
-      width: 150px;
-      height: 150px;
-      border-radius: 12px;
-      object-fit: cover;
-      border: 2px solid #00D9FF;
+    @media (max-width: 768px) {
+      .tool-header { flex-direction: column; text-align: center; }
+      .tool-icon { width: 100px; height: 100px; }
+      .comment-form { flex-direction: column; }
     }
-
-    .tool-info {
-      flex: 1;
-    }
-
-    .tool-name {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #00D9FF;
-      margin-bottom: 1rem;
-    }
-
-    .tool-description {
-      font-size: 1rem;
-      color: rgba(255, 255, 255, 0.8);
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
-    }
-
-    .tool-actions {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .like-btn, .download-btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cu...(truncated 6836 characters)...
   </style>
 </head>
 <body>
-  <header>
-    <button class="back-btn" onclick="window.location.href = 'download.html'">← Back</button>
-    <div class="logo">ZAPFIX</div>
-  </header>
+  <div class="container">
+    <div class="header">
+      <div class="logo">ZAPFIX</div>
+      <a href="download.html" class="back-btn">Back to Tools</a>
+    </div>
 
-  <div class="tool-container" id="toolContainer">
-    <div class="loading">Loading tool details...</div>
+    <div class="tool-container" id="toolContainer">
+      <div class="loading" style="padding: 40px; text-align: center;">Loading tool...</div>
+    </div>
   </div>
 
   <script>
-    const BACKEND_URL = '';  // Empty for Render (same domain)
-
     const urlParams = new URLSearchParams(window.location.search);
     const toolId = urlParams.get('id');
+    let tool = {};
 
     async function loadTool() {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/tools/${toolId}`);
-        if (!response.ok) throw new Error('Failed to load tool');
-        const tool = await response.json();
-        renderTool(tool);
+        const res = await fetch(`/api/tools/${toolId}`);
+        if (!res.ok) throw new Error('Tool not found');
+        tool = await res.json();
+        renderTool();
       } catch (err) {
-        document.getElementById('toolContainer').innerHTML = `<p class="error">Error loading tool: ${err.message}</p>`;
+        document.getElementById('toolContainer').innerHTML = 
+          '<div class="no-tools">Tool not found.</div>';
       }
     }
 
-    function renderTool(tool) {
-      document.getElementById('toolContainer').innerHTML = `
+    function renderTool() {
+      const container = document.getElementById('toolContainer');
+      container.innerHTML = `
         <div class="tool-header">
-          <img src="${tool.icon}" alt="${tool.name}" class="tool-icon">
+          <img src="${tool.icon}" alt="${tool.name}" class="tool-icon" onerror="this.src='https://via.placeholder.com/120/333/666?text=Icon'">
           <div class="tool-info">
-            <h1 class="tool-name">${tool.name}</h1>
-            <p class="tool-description">${tool.description}</p>
+            <h1 class="tool-name">${escapeHtml(tool.name)}</h1>
+            <p class="tool-desc">${escapeHtml(tool.description)}</p>
+            <button class="download-btn" onclick="downloadFile('${tool.file}', '${tool.name}')">
+              Download Tool
+            </button>
           </div>
-        </div>
-        <div class="tool-actions">
-          <button class="like-btn" onclick="likeTool('${tool._id}')">Like <span id="likeCount">${tool.likes || 0}</span></button>
-          <a href="${tool.file}" class="download-btn" download>Download Tool</a>
-        </div>
-        <div class="comments-section">
-          <h2>Comments</h2>
-          <div class="comment-form">
-            <input type="text" id="commentName" placeholder="Your name (optional)">
-            <textarea id="commentText" placeholder="Share your thoughts..."></textarea>
-          </div>
-          <button class="post-btn" onclick="postComment('${tool._id}')">Post Comment</button>
         </div>
 
-        <div id="commentsList" class="comments-list">
-          ${renderComments(tool.comments)}
+        <div class="like-section">
+          <button class="like-btn" id="likeBtn" onclick="likeTool()">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span id="likeCount">${tool.likes || 0}</span> Likes
+          </button>
+        </div>
+
+        <div class="comments-section">
+          <h3 class="comments-title">Comments (${tool.comments?.length || 0})</h3>
+          <div class="comment-form">
+            <input type="text" class="comment-input" id="commentName" placeholder="Your name (optional)">
+            <input type="text" class="comment-input" id="commentText" placeholder="Add a comment..." required>
+            <button class="submit-comment" onclick="addComment()">Post</button>
+          </div>
+          <div id="commentsList" class="comments-list">
+            ${renderComments(tool.comments)}
+          </div>
         </div>
       `;
+
+      if (localStorage.getItem(`liked_${toolId}`)) {
+        document.getElementById('likeBtn').classList.add('liked');
+      }
     }
 
-    function renderComments(comments) {
-      if (!comments || comments.length === 0) {
-        return '<p style="color: rgba(255, 255, 255, 0.5);">No comments yet. Be the first to comment!</p>';
-      }
-      return comments.map(comment => `
+    function renderComments(comments = []) {
+      if (!comments.length) return '<p class="no-comments">No comments yet. Be the first!</p>';
+      return comments.map(c => `
         <div class="comment">
-          <div class="comment-author">${comment.name || 'Anonymous'}</div>
-          <div class="comment-text">${comment.text}</div>
-          <div class="comment-time">${new Date(comment.createdAt).toLocaleString()}</div>
+          <div class="comment-header">
+            <span class="comment-author">${escapeHtml(c.name || 'Anonymous')}</span>
+            <span class="comment-time">${new Date(c.createdAt).toLocaleString()}</span>
+          </div>
+          <p class="comment-text">${escapeHtml(c.text)}</p>
         </div>
       `).join('');
     }
 
-    async function likeTool(id) {
+    async function likeTool() {
+      if (localStorage.getItem(`liked_${toolId}`)) return;
+      
       try {
-        const response = await fetch(`${BACKEND_URL}/api/tools/${id}/like`, {
-          method: 'POST'
-        });
-        if (!response.ok) throw new Error('Failed to like');
-        const data = await response.json();
-        document.getElementById('likeCount').textContent = data.likes;
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
+        const res = await fetch(`/api/tools/${toolId}/like`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('likeCount').textContent = data.likes;
+          document.getElementById('likeBtn').classList.add('liked');
+          localStorage.setItem(`liked_${toolId}`, 'true');
+        }
+      } catch (err) { console.error(err); }
     }
 
-    async function postComment(id) {
-      const name = document.getElementById('commentName').value || 'Anonymous';
-      const text = document.getElementById('commentText').value;
-
-      if (!text.trim()) {
-        alert('Please enter a comment');
-        return;
-      }
+    async function addComment() {
+      const name = document.getElementById('commentName').value.trim();
+      const text = document.getElementById('commentText').value.trim();
+      if (!text) return;
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/tools/${id}/comments`, {
+        const res = await fetch(`/api/tools/${toolId}/comments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, text })
+          body: JSON.stringify({ name: name || 'Anonymous', text })
         });
-        if (!response.ok) throw new Error('Failed to post comment');
-        const comments = await response.json();
-        document.getElementById('commentsList').innerHTML = renderComments(comments);
-        document.getElementById('commentName').value = '';
-        document.getElementById('commentText').value = '';
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
+        if (res.ok) {
+          document.getElementById('commentText').value = '';
+          document.getElementById('commentName').value = '';
+          loadTool();
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function downloadFile(url, name) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     loadTool();
