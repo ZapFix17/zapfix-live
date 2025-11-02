@@ -55,7 +55,12 @@
 </div>
 
 <script>
-  // DOM Elements
+  const token = localStorage.getItem('adminToken');
+  if (!token) {
+    alert('Login required!');
+    location.href = 'logindownload.html';
+  }
+
   const thumbInput = document.getElementById('thumbInput');
   const thumbLabel = document.getElementById('thumbLabel');
   const thumbPreview = document.getElementById('thumbPreview');
@@ -65,35 +70,27 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const status = document.getElementById('status');
 
-  // Trigger file input
   thumbLabel.addEventListener('click', () => thumbInput.click());
   videoLabel.addEventListener('click', () => videoInput.click());
 
-  // Preview thumbnail
   thumbInput.addEventListener('change', () => {
     const file = thumbInput.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = e => {
-        thumbPreview.innerHTML = `<img src="${e.target.result}" alt="Thumbnail">`;
-      };
+      reader.onload = e => thumbPreview.innerHTML = `<img src="${e.target.result}" alt="Thumbnail">`;
       reader.readAsDataURL(file);
     }
   });
 
-  // Preview video
   videoInput.addEventListener('change', () => {
     const file = videoInput.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = e => {
-        videoPreview.innerHTML = `<video src="${e.target.result}" controls></video>`;
-      };
+      reader.onload = e => videoPreview.innerHTML = `<video src="${e.target.result}" controls></video>`;
       reader.readAsDataURL(file);
     }
   });
 
-  // Upload
   uploadBtn.addEventListener('click', async () => {
     const title = document.getElementById('title').value.trim();
     const description = document.getElementById('description').value.trim();
@@ -101,11 +98,11 @@
     const videoFile = videoInput.files[0];
 
     if (!title || !description || !thumbFile || !videoFile) {
-      alert('Please fill all fields and select both files!');
+      alert('All fields required!');
       return;
     }
 
-    status.textContent = 'Uploading... (this may take a while)';
+    status.textContent = 'Uploading...';
     uploadBtn.disabled = true;
 
     const formData = new FormData();
@@ -117,25 +114,24 @@
     try {
       const res = await fetch('/upload', {
         method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
         body: formData
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch (e) { throw new Error('Server error'); }
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || data.error || 'Upload failed');
-      }
+      if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
 
-      status.textContent = 'Upload successful! Redirecting...';
+      status.textContent = 'Success! Redirecting...';
       setTimeout(() => location.href = 'feed.html', 1500);
 
     } catch (err) {
-      console.error('Upload error:', err);
-      status.textContent = `Upload failed: ${err.message}`;
+      status.textContent = `Failed: ${err.message}`;
       uploadBtn.disabled = false;
     }
   });
 </script>
-
 </body>
 </html>
