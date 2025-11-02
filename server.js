@@ -9,10 +9,14 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// FIX: Bind to 0.0.0.0 for Render
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`ZAPFIX LIVE on port ${PORT}`);
 });
@@ -20,20 +24,10 @@ app.listen(PORT, '0.0.0.0', () => {
 // Middleware
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(join(dirname(fileURLToPath(import.meta.url)), 'public')));
+app.use(express.static(join(__dirname, 'public')));
 app.use(cors({ origin: '*' }));
 
-// Rate limiting
-const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many uploads, try again later' }
-});
-
-// Cloudinary Config with DEBUG
-console.log('CLOUD_NAME:', process.env.CLOUD_NAME || 'MISSING');
-console.log('API_KEY:', process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING');
-console.log('API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING');
+const uploadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -41,180 +35,162 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Multer
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/', 'video/', 'application/'].some(t => file.mimetype.startsWith(t));
-    cb(null, allowed);
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'application/octet-stream', 'application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
+    }
   }
 });
 
-// MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => {
-    console.error('MongoDB ERROR:', err);
-    process.exit(1);
-  });
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB error:', err));
 
-// Tool Schema
 const toolSchema = new mongoose.Schema({
-  name: String,
-  description: String,
-  icon: String,
-  thumbnail: String,
-  file: String,
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  icon: { type: String, required: true },
+  thumbnail: { type: String, required: true },
+  file: { type: String, required: true },
   likes: { type: Number, default: 0 },
-  comments: [{ name: String, text: String, createdAt: { type: Date, default: Date.now } }],
+  comments: [{
+    name: { type: String, required: true },
+    text: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
   createdAt: { type: Date, default: Date.now }
 });
-const Tool = mongoose.model('Tool', toolSchema);
 
-// JWT Verify
+const Tool = mongoose.model("Tool", toolSchema);
+
+// JWT Verification
 const verifyJWT = (req, res, next) => {
   const token = req.header('Authorization')?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token' });
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
   try {
-    jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
-  } catch {
+  } catch (err) {
     res.status(401).json({ error: 'Invalid token' });
   }
 };
 
-// Helper: Upload to Cloudinary
-const uploadFile = (buffer, type = 'raw') => {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      { folder: 'zapfix_tools', resource_type: type },
-      (err, result) => err ? reject(err) : resolve(result.secure_url)
-    ).end(buffer);
-  });
-};
-
-// ========================
-// PUBLIC ROUTES
-// ========================
-
+// Public Routes
 app.get('/api/tools', async (req, res) => {
   try {
-    const tools = await Tool.find().sort({ createdAt: -1 });
-    res.json(tools);
+    const tools = await Tool.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, tools });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch tools' });
   }
 });
 
-app.get('/api/tools/:id', async (req, res) => {
+// Videos Route (for feed.html)
+app.get('/videos', async (req, res) => {
   try {
-    const tool = await Tool.findById(req.params.id);
-    if (!tool) return res.status(404).json({ error: 'Tool not found' });
-    res.json(tool);
+    const videos = await Tool.find().sort({ createdAt: -1 });  // Use Tool or create Video model
+    res.json({ success: true, videos });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch tool' });
+    res.status(500).json({ error: 'Failed to fetch videos' });
   }
 });
 
-app.post('/api/tools/:id/like', async (req, res) => {
-  try {
-    const tool = await Tool.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { likes: 1 } },
-      { new: true }
-    );
-    if (!tool) return res.status(404).json({ error: 'Tool not found' });
-    res.json({ likes: tool.likes });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to like tool' });
-  }
-});
-
-app.post('/api/tools/:id/comments', async (req, res) => {
-  try {
-    const { name, text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Text required' });
-
-    const tool = await Tool.findByIdAndUpdate(
-      req.params.id,
-      { $push: { comments: { name: name || 'Anonymous', text } } },
-      { new: true }
-    );
-    if (!tool) return res.status(404).json({ error: 'Tool not found' });
-    res.json(tool.comments);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to add comment' });
-  }
-});
-
-// ========================
-// ADMIN ROUTES
-// ========================
-
-// LOGIN
+// Admin Login
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
     if (email !== process.env.ADMIN_EMAIL) {
-      return res.status(401).json({ error: 'Invalid email' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (!process.env.ADMIN_HASH) {
       return res.status(500).json({ error: 'Server misconfigured' });
     }
 
-    const match = await bcryptjs.compare(password, process.env.ADMIN_HASH);
-    if (!match) return res.status(401).json({ error: 'Invalid password' });
+    const isMatch = await bcryptjs.compare(password, process.env.ADMIN_HASH);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.json({ token });
   } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
-// UPLOAD TOOL
+// Admin Upload (Videos/Tools)
 app.post('/api/admin/upload', verifyJWT, uploadLimiter, upload.fields([
-  { name: 'icon' }, { name: 'thumbnail' }, { name: 'file' }
+  { name: 'icon' },
+  { name: 'thumbnail' },
+  { name: 'file' }
 ]), async (req, res) => {
   try {
     const { name, description } = req.body;
     if (!name || !description || !req.files?.icon || !req.files?.thumbnail || !req.files?.file) {
-      return res.status(400).json({ error: 'All fields required' });
+      return res.status(400).json({ error: 'All fields and files required' });
     }
 
-    const [icon, thumb, file] = await Promise.all([
+    const uploadFile = (buffer, type = 'raw') => {
+      return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: 'zapfix_tools', resource_type: type },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        ).end(buffer);
+      });
+    };
+
+    const [iconUrl, thumbnailUrl, fileUrl] = await Promise.all([
       uploadFile(req.files.icon[0].buffer, 'image'),
       uploadFile(req.files.thumbnail[0].buffer, 'image'),
       uploadFile(req.files.file[0].buffer, 'raw')
     ]);
 
-    await Tool.create({ name, description, icon, thumbnail: thumb, file });
-    res.json({ message: 'Tool uploaded successfully' });
+    const tool = await Tool.create({
+      name,
+      description,
+      icon: iconUrl,
+      thumbnail: thumbnailUrl,
+      file: fileUrl
+    });
+
+    res.json({ message: 'Tool uploaded successfully', tool });
   } catch (err) {
-    console.error('UPLOAD ERROR:', err);
+    console.error('Upload error:', err);
     res.status(500).json({ error: 'Upload failed' });
   }
 });
 
-// GET ALL TOOLS (ADMIN)
+// Admin Tools
 app.get('/api/admin/tools', verifyJWT, async (req, res) => {
   try {
-    const tools = await Tool.find().sort({ createdAt: -1 });
+    const tools = await Tool.find({}).sort({ createdAt: -1 });
     res.json(tools);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch tools' });
   }
 });
 
-// UPDATE TOOL
+// Update Tool
 app.put('/api/admin/tool/:id', verifyJWT, upload.fields([
-  { name: 'icon' }, { name: 'thumbnail' }, { name: 'file' }
+  { name: 'icon' },
+  { name: 'thumbnail' },
+  { name: 'file' }
 ]), async (req, res) => {
   try {
     const updates = { name: req.body.name, description: req.body.description };
@@ -230,7 +206,7 @@ app.put('/api/admin/tool/:id', verifyJWT, upload.fields([
   }
 });
 
-// DELETE TOOL
+// Delete Tool
 app.delete('/api/admin/tool/:id', verifyJWT, async (req, res) => {
   try {
     const tool = await Tool.findByIdAndDelete(req.params.id);
@@ -241,7 +217,7 @@ app.delete('/api/admin/tool/:id', verifyJWT, async (req, res) => {
   }
 });
 
-// DELETE COMMENT
+// Delete Comment
 app.delete('/api/admin/tool/:toolId/comment/:commentId', verifyJWT, async (req, res) => {
   try {
     const tool = await Tool.findByIdAndUpdate(
@@ -256,7 +232,7 @@ app.delete('/api/admin/tool/:toolId/comment/:commentId', verifyJWT, async (req, 
   }
 });
 
-// Serve HTML
-app.get('*', (req, res) => {
-  res.sendFile(join(dirname(fileURLToPath(import.meta.url)), 'public', 'index.html'));
+// Serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'index.html'));
 });
