@@ -16,13 +16,13 @@
       font-family: 'Poppins', sans-serif;
       background: #0a0e27;
       color: #fff;
-      padding: 20px 10px;
       min-height: 100vh;
     }
 
     .container {
       max-width: 1600px;
       margin: 0 auto;
+      padding: 20px;
     }
 
     .header {
@@ -54,62 +54,55 @@
 
     .back-btn:hover {
       background: #00b8cc;
+      transform: translateY(-2px);
     }
 
     .page-title {
-      font-size: 1.6rem;
+      font-size: 1.8rem;
       color: #00D9FF;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-weight: 600;
+      text-align: center;
     }
 
-    /* SCROLLABLE 4-COLUMN GRID */
-    .tools-row {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      gap: 20px;
+    /* VERTICAL GRID: 4 TOOLS PER ROW */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
       padding: 10px 0;
-      scrollbar-width: none;
-    }
-
-    .tools-row::-webkit-scrollbar {
-      display: none;
     }
 
     .tool-card {
-      flex: 0 0 calc(25% - 15px); /* 4 cards per row */
-      min-width: 280px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(0, 217, 255, 0.2);
       border-radius: 12px;
       overflow: hidden;
       transition: all 0.3s ease;
-      scroll-snap-align: start;
       cursor: pointer;
     }
 
     .tool-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 10px 25px rgba(0, 217, 255, 0.2);
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0, 217, 255, 0.25);
       border-color: #00D9FF;
     }
 
     .tool-thumbnail {
       width: 100%;
-      height: 160px;
+      height: 180px;
       object-fit: cover;
       background: #222;
     }
 
     .tool-info {
-      padding: 14px;
+      padding: 16px;
     }
 
     .tool-title {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #fff;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -118,9 +111,9 @@
     }
 
     .tool-desc {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -130,9 +123,9 @@
     .tool-stats {
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .download-btn {
@@ -140,10 +133,10 @@
       color: #000;
       border: none;
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       border-radius: 6px;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       cursor: pointer;
       transition: 0.3s;
     }
@@ -153,17 +146,32 @@
     }
 
     .loading, .no-tools {
+      grid-column: 1 / -1;
       text-align: center;
       padding: 40px;
       font-size: 1.1rem;
       color: rgba(255, 255, 255, 0.6);
     }
 
-    /* Mobile: Smooth scroll */
-    @media (max-width: 768px) {
-      .tool-card {
-        min-width: 260px;
-        flex: 0 0 calc(100vw - 40px);
+    /* RESPONSIVE: 4 → 3 → 2 → 1 */
+    @media (max-width: 1400px) {
+      .tools-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 992px) {
+      .tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+      .tool-thumbnail {
+        height: 160px;
       }
     }
   </style>
@@ -177,7 +185,7 @@
 
     <h1 class="page-title">Download Tools</h1>
 
-    <div id="toolsRow" class="tools-row">
+    <div id="toolsGrid" class="tools-grid">
       <div class="loading">Loading tools...</div>
     </div>
   </div>
@@ -190,22 +198,22 @@
         const tools = await response.json();
         renderTools(tools);
       } catch (err) {
-        document.getElementById('toolsRow').innerHTML = 
+        document.getElementById('toolsGrid').innerHTML = 
           '<div class="no-tools">Failed to load tools.</div>';
       }
     }
 
     function renderTools(tools) {
-      const row = document.getElementById('toolsRow');
+      const grid = document.getElementById('toolsGrid');
       if (tools.length === 0) {
-        row.innerHTML = '<div class="no-tools">No tools yet.</div>';
+        grid.innerHTML = '<div class="no-tools">No tools available yet.</div>';
         return;
       }
 
-      row.innerHTML = tools.map(tool => `
+      grid.innerHTML = tools.map(tool => `
         <div class="tool-card" onclick="openTool('${tool._id}')">
           <img src="${tool.thumbnail}" alt="${tool.name}" class="tool-thumbnail" 
-               onerror="this.src='https://via.placeholder.com/300x160/333/666?text=Tool'">
+               onerror="this.src='https://via.placeholder.com/400x180/333/666?text=Tool'">
           <div class="tool-info">
             <h3 class="tool-title">${escapeHtml(tool.name)}</h3>
             <p class="tool-desc">${escapeHtml(tool.description)}</p>
