@@ -30,7 +30,11 @@ const uploadLimiter = rateLimit({
   message: { error: 'Too many uploads, try again later' }
 });
 
-// Cloudinary
+// Cloudinary Config with DEBUG
+console.log('CLOUD_NAME:', process.env.CLOUD_NAME || 'MISSING');
+console.log('API_KEY:', process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING');
+console.log('API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING');
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -81,6 +85,70 @@ const verifyJWT = (req, res, next) => {
   }
 };
 
+// Helper: Upload to Cloudinary
+const uploadFile = (buffer, type = 'raw') => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: 'zapfix_tools', resource_type: type },
+      (err, result) => err ? reject(err) : resolve(result.secure_url)
+    ).end(buffer);
+  });
+};
+
+// ========================
+// PUBLIC ROUTES
+// ========================
+
+app.get('/api/tools', async (req, res) => {
+  try {
+    const tools = await Tool.find().sort({ createdAt: -1 });
+    res.json(tools);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch tools' });
+  }
+});
+
+app.get('/api/tools/:id', async (req, res) => {
+  try {
+    const tool = await Tool.findById(req.params.id);
+    if (!tool) return res.status(404).json({ error: 'Tool not found' });
+    res.json(tool);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch tool' });
+  }
+});
+
+app.post('/api/tools/:id/like', async (req, res) => {
+  try {
+    const tool = await Tool.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+    if (!tool) return res.status(404).json({ error: 'Tool not found' });
+    res.json({ likes: tool.likes });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to like tool' });
+  }
+});
+
+app.post('/api/tools/:id/comments', async (req, res) => {
+  try {
+    const { name, text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Text required' });
+
+    const tool = await Tool.findByIdAndUpdate(
+      req.params.id,
+      { $push: { comments: { name: name || 'Anonymous', text } } },
+      { new: true }
+    );
+    if (!tool) return res.status(404).json({ error: 'Tool not found' });
+    res.json(tool.comments);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
 // ========================
 // ADMIN ROUTES
 // ========================
@@ -110,26 +178,15 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// UPLOAD TOOL — THIS WAS MISSING!
+// UPLOAD TOOL
 app.post('/api/admin/upload', verifyJWT, uploadLimiter, upload.fields([
-  { name: 'icon' },
-  { name: 'thumbnail' },
-  { name: 'file' }
+  { name: 'icon' }, { name: 'thumbnail' }, { name: 'file' }
 ]), async (req, res) => {
   try {
     const { name, description } = req.body;
     if (!name || !description || !req.files?.icon || !req.files?.thumbnail || !req.files?.file) {
       return res.status(400).json({ error: 'All fields required' });
     }
-
-    const uploadFile = (buffer, type = 'raw') => {
-      return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: 'zapfix_tools', resource_type: type },
-          (err, result) => err ? reject(err) : resolve(result.secure_url)
-        ).end(buffer);
-      });
-    };
 
     const [icon, thumb, file] = await Promise.all([
       uploadFile(req.files.icon[0].buffer, 'image'),
@@ -138,10 +195,64 @@ app.post('/api/admin/upload', verifyJWT, uploadLimiter, upload.fields([
     ]);
 
     await Tool.create({ name, description, icon, thumbnail: thumb, file });
-    res.json({ message: 'Uploaded successfully' });
+    res.json({ message: 'Tool uploaded successfully' });
   } catch (err) {
     console.error('UPLOAD ERROR:', err);
     res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// GET ALL TOOLS (ADMIN)
+app.get('/api/admin/tools', verifyJWT, async (req, res) => {
+  try {
+    const tools = await Tool.find().sort({ createdAt: -1 });
+    res.json(tools);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch tools' });
+  }
+});
+
+// UPDATE TOOL
+app.put('/api/admin/tool/:id', verifyJWT, upload.fields([
+  { name: 'icon' }, { name: 'thumbnail' }, { name: 'file' }
+]), async (req, res) => {
+  try {
+    const updates = { name: req.body.name, description: req.body.description };
+    if (req.files?.icon) updates.icon = await uploadFile(req.files.icon[0].buffer, 'image');
+    if (req.files?.thumbnail) updates.thumbnail = await uploadFile(req.files.thumbnail[0].buffer, 'image');
+    if (req.files?.file) updates.file = await uploadFile(req.files.file[0].buffer, 'raw');
+
+    const tool = await Tool.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!tool) return res.status(404).json({ error: 'Tool not found' });
+    res.json({ message: 'Tool updated', tool });
+  } catch (err) {
+    res.status(500).json({ error: 'Update failed' });
+  }
+});
+
+// DELETE TOOL
+app.delete('/api/admin/tool/:id', verifyJWT, async (req, res) => {
+  try {
+    const tool = await Tool.findByIdAndDelete(req.params.id);
+    if (!tool) return res.status(404).json({ error: 'Tool not found' });
+    res.json({ message: 'Tool deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
+// DELETE COMMENT
+app.delete('/api/admin/tool/:toolId/comment/:commentId', verifyJWT, async (req, res) => {
+  try {
+    const tool = await Tool.findByIdAndUpdate(
+      req.params.toolId,
+      { $pull: { comments: { _id: req.params.commentId } } },
+      { new: true }
+    );
+    if (!tool) return res.status(404).json({ error: 'Tool not found' });
+    res.json({ message: 'Comment deleted', comments: tool.comments });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed' });
   }
 });
 
