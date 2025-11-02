@@ -40,7 +40,12 @@
   <label for="description">Description</label>
   <textarea id="description" rows="4" placeholder="Enter video description" required></textarea>
 
-  <label>Thumbnail (Image)</label>
+  <label>Icon (Small Image)</label>
+  <div class="file-label" id="iconLabel">Choose Icon</div>
+  <input type="file" id="iconInput" accept="image/*" required>
+  <div class="preview" id="iconPreview"></div>
+
+  <label>Thumbnail (Large Image)</label>
   <div class="file-label" id="thumbLabel">Choose Thumbnail</div>
   <input type="file" id="thumbInput" accept="image/*" required>
   <div class="preview" id="thumbPreview"></div>
@@ -61,6 +66,10 @@
     location.href = 'logindownload.html';
   }
 
+  // DOM
+  const iconInput = document.getElementById('iconInput');
+  const iconLabel = document.getElementById('iconLabel');
+  const iconPreview = document.getElementById('iconPreview');
   const thumbInput = document.getElementById('thumbInput');
   const thumbLabel = document.getElementById('thumbLabel');
   const thumbPreview = document.getElementById('thumbPreview');
@@ -70,34 +79,40 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const status = document.getElementById('status');
 
+  // Click to open file
+  iconLabel.addEventListener('click', () => iconInput.click());
   thumbLabel.addEventListener('click', () => thumbInput.click());
   videoLabel.addEventListener('click', () => videoInput.click());
 
-  thumbInput.addEventListener('change', () => {
-    const file = thumbInput.files[0];
+  // Preview
+  iconInput.addEventListener('change', () => previewFile(iconInput, iconPreview));
+  thumbInput.addEventListener('change', () => previewFile(thumbInput, thumbPreview));
+  videoInput.addEventListener('change', () => previewFile(videoInput, videoPreview, true));
+
+  function previewFile(input, preview, isVideo = false) {
+    const file = input.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = e => thumbPreview.innerHTML = `<img src="${e.target.result}" alt="Thumbnail">`;
+      reader.onload = e => {
+        if (isVideo) {
+          preview.innerHTML = `<video src="${e.target.result}" controls></video>`;
+        } else {
+          preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        }
+      };
       reader.readAsDataURL(file);
     }
-  });
+  }
 
-  videoInput.addEventListener('change', () => {
-    const file = videoInput.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => videoPreview.innerHTML = `<video src="${e.target.result}" controls></video>`;
-      reader.readAsDataURL(file);
-    }
-  });
-
+  // Upload
   uploadBtn.addEventListener('click', async () => {
-    const title = document.getElementById('title').value.trim();
+    const name = document.getElementById('title').value.trim();
     const description = document.getElementById('description').value.trim();
+    const iconFile = iconInput.files[0];
     const thumbFile = thumbInput.files[0];
     const videoFile = videoInput.files[0];
 
-    if (!title || !description || !thumbFile || !videoFile) {
+    if (!name || !description || !iconFile || !thumbFile || !videoFile) {
       alert('All fields required!');
       return;
     }
@@ -106,21 +121,20 @@
     uploadBtn.disabled = true;
 
     const formData = new FormData();
-    formData.append('title', title);
+    formData.append('name', name);           // ← MUST BE 'name'
     formData.append('description', description);
-    formData.append('thumbnail', thumbFile);
-    formData.append('video', videoFile);
+    formData.append('icon', iconFile);       // ← MUST BE 'icon'
+    formData.append('thumbnail', thumbFile); // ← MUST BE 'thumbnail'
+    formData.append('file', videoFile);      // ← MUST BE 'file'
 
     try {
-      const res = await fetch('/upload', {
+      const res = await fetch('/api/admin/upload', {  // ← USE ADMIN ROUTE
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token },
         body: formData
       });
 
-      const text = await res.text();
-      let data;
-      try { data = JSON.parse(text); } catch (e) { throw new Error('Server error'); }
+      const data = await res.json();
 
       if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
 
