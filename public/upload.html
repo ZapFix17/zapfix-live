@@ -40,12 +40,7 @@
   <label for="description">Description</label>
   <textarea id="description" rows="4" placeholder="Enter video description" required></textarea>
 
-  <label>Icon (Small Image)</label>
-  <div class="file-label" id="iconLabel">Choose Icon</div>
-  <input type="file" id="iconInput" accept="image/*" required>
-  <div class="preview" id="iconPreview"></div>
-
-  <label>Thumbnail (Large Image)</label>
+  <label>Thumbnail (Used as Icon + Thumbnail)</label>
   <div class="file-label" id="thumbLabel">Choose Thumbnail</div>
   <input type="file" id="thumbInput" accept="image/*" required>
   <div class="preview" id="thumbPreview"></div>
@@ -66,10 +61,6 @@
     location.href = 'logindownload.html';
   }
 
-  // DOM
-  const iconInput = document.getElementById('iconInput');
-  const iconLabel = document.getElementById('iconLabel');
-  const iconPreview = document.getElementById('iconPreview');
   const thumbInput = document.getElementById('thumbInput');
   const thumbLabel = document.getElementById('thumbLabel');
   const thumbPreview = document.getElementById('thumbPreview');
@@ -79,40 +70,34 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const status = document.getElementById('status');
 
-  // Click to open file
-  iconLabel.addEventListener('click', () => iconInput.click());
   thumbLabel.addEventListener('click', () => thumbInput.click());
   videoLabel.addEventListener('click', () => videoInput.click());
 
-  // Preview
-  iconInput.addEventListener('change', () => previewFile(iconInput, iconPreview));
-  thumbInput.addEventListener('change', () => previewFile(thumbInput, thumbPreview));
-  videoInput.addEventListener('change', () => previewFile(videoInput, videoPreview, true));
-
-  function previewFile(input, preview, isVideo = false) {
-    const file = input.files[0];
+  thumbInput.addEventListener('change', () => {
+    const file = thumbInput.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = e => {
-        if (isVideo) {
-          preview.innerHTML = `<video src="${e.target.result}" controls></video>`;
-        } else {
-          preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-        }
-      };
+      reader.onload = e => thumbPreview.innerHTML = `<img src="${e.target.result}" alt="Thumbnail">`;
       reader.readAsDataURL(file);
     }
-  }
+  });
 
-  // Upload
+  videoInput.addEventListener('change', () => {
+    const file = videoInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => videoPreview.innerHTML = `<video src="${e.target.result}" controls></video>`;
+      reader.readAsDataURL(file);
+    }
+  });
+
   uploadBtn.addEventListener('click', async () => {
     const name = document.getElementById('title').value.trim();
     const description = document.getElementById('description').value.trim();
-    const iconFile = iconInput.files[0];
     const thumbFile = thumbInput.files[0];
     const videoFile = videoInput.files[0];
 
-    if (!name || !description || !iconFile || !thumbFile || !videoFile) {
+    if (!name || !description || !thumbFile || !videoFile) {
       alert('All fields required!');
       return;
     }
@@ -121,14 +106,14 @@
     uploadBtn.disabled = true;
 
     const formData = new FormData();
-    formData.append('name', name);           // ← MUST BE 'name'
+    formData.append('name', name);
     formData.append('description', description);
-    formData.append('icon', iconFile);       // ← MUST BE 'icon'
-    formData.append('thumbnail', thumbFile); // ← MUST BE 'thumbnail'
-    formData.append('file', videoFile);      // ← MUST BE 'file'
+    formData.append('icon', thumbFile);       // ← SAME AS THUMBNAIL
+    formData.append('thumbnail', thumbFile);  // ← SAME AS ICON
+    formData.append('file', videoFile);       // ← VIDEO
 
     try {
-      const res = await fetch('/api/admin/upload', {  // ← USE ADMIN ROUTE
+      const res = await fetch('/api/admin/upload', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token },
         body: formData
@@ -136,12 +121,15 @@
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Upload failed');
+      }
 
-      status.textContent = 'Success! Redirecting...';
+      status.textContent = 'Upload successful! Redirecting...';
       setTimeout(() => location.href = 'feed.html', 1500);
 
     } catch (err) {
+      console.error('Upload error:', err);
       status.textContent = `Failed: ${err.message}`;
       uploadBtn.disabled = false;
     }
