@@ -21,110 +21,121 @@
   button.upload-btn { width:100%; background:#00b894; color:white; padding:12px; font-size:16px; border:none; border-radius:12px; margin-top:25px; cursor:pointer; transition:background 0.3s; }
   button.upload-btn:hover { background:#01996b; }
   .status { text-align:center; margin-top:15px; color:#0077ff; font-weight:500; }
-  @media(max-width:600px){ .container{margin:20px;padding:20px;} .preview img,.preview video{width:100%;height:auto;} }
+  @media(max-width:600px){ .container { margin:20px auto; padding:20px; } }
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo" onclick="location.href='feed.html'">ZAPFIX</div>
-  <button class="back-btn" onclick="location.href='feed.html'">← Back</button>
+  <button class="back-btn" onclick="location.href='feed.html'">Back</button>
 </header>
 
 <div class="container">
   <h2>Upload Video</h2>
 
-  <label>Title</label>
-  <input type="text" id="title" placeholder="Enter video title">
+  <label for="title">Title</label>
+  <input type="text" id="title" placeholder="Enter video title" required>
 
-  <label>Description</label>
-  <textarea id="description" rows="3" placeholder="Enter video description"></textarea>
+  <label for="description">Description</label>
+  <textarea id="description" rows="4" placeholder="Enter video description" required></textarea>
 
-  <label>Thumbnail</label>
-  <label class="file-label" for="thumbnail">Choose Thumbnail</label>
-  <input type="file" id="thumbnail" accept="image/*">
+  <label>Thumbnail (Image)</label>
+  <div class="file-label" id="thumbLabel">Choose Thumbnail</div>
+  <input type="file" id="thumbInput" accept="image/*" required>
   <div class="preview" id="thumbPreview"></div>
 
-  <label>Video</label>
-  <label class="file-label" for="video">Choose Video</label>
-  <input type="file" id="video" accept="video/*">
+  <label>Video File</label>
+  <div class="file-label" id="videoLabel">Choose Video</div>
+  <input type="file" id="videoInput" accept="video/*" required>
   <div class="preview" id="videoPreview"></div>
 
-  <button class="upload-btn" id="uploadBtn">Upload</button>
-  <div class="status" id="status"></div>
+  <button class="upload-btn" id="uploadBtn">Upload Video</button>
+  <p class="status" id="status"></p>
 </div>
 
 <script>
-const BACKEND_URL = "https://zapfix-live.onrender.com"; // <<-- set your Render URL here if different
+  // DOM Elements
+  const thumbInput = document.getElementById('thumbInput');
+  const thumbLabel = document.getElementById('thumbLabel');
+  const thumbPreview = document.getElementById('thumbPreview');
+  const videoInput = document.getElementById('videoInput');
+  const videoLabel = document.getElementById('videoLabel');
+  const videoPreview = document.getElementById('videoPreview');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const status = document.getElementById('status');
 
-const thumbInput = document.getElementById("thumbnail");
-const videoInput = document.getElementById("video");
-const thumbPreview = document.getElementById("thumbPreview");
-const videoPreview = document.getElementById("videoPreview");
-const uploadBtn = document.getElementById("uploadBtn");
-const status = document.getElementById("status");
+  // Trigger file input
+  thumbLabel.addEventListener('click', () => thumbInput.click());
+  videoLabel.addEventListener('click', () => videoInput.click());
 
-// Thumbnail preview
-thumbInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => (thumbPreview.innerHTML = `<img src="${reader.result}" alt="Thumbnail Preview">`);
-    reader.readAsDataURL(file);
-  }
-});
+  // Preview thumbnail
+  thumbInput.addEventListener('change', () => {
+    const file = thumbInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        thumbPreview.innerHTML = `<img src="${e.target.result}" alt="Thumbnail">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-// Video preview
-videoInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => (videoPreview.innerHTML = `<video src="${reader.result}" controls></video>`);
-    reader.readAsDataURL(file);
-  }
-});
+  // Preview video
+  videoInput.addEventListener('change', () => {
+    const file = videoInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        videoPreview.innerHTML = `<video src="${e.target.result}" controls></video>`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-// Upload to backend
-uploadBtn.addEventListener("click", async () => {
-  const title = document.getElementById("title").value.trim();
-  const description = document.getElementById("description").value.trim();
-  const thumbFile = thumbInput.files[0];
-  const videoFile = videoInput.files[0];
+  // Upload
+  uploadBtn.addEventListener('click', async () => {
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const thumbFile = thumbInput.files[0];
+    const videoFile = videoInput.files[0];
 
-  if (!title || !description || !thumbFile || !videoFile) {
-    alert("Please fill all fields and select both files!");
-    return;
-  }
-
-  status.textContent = "⏳ Uploading... (this can take a while for large files)";
-
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("thumbnail", thumbFile);
-  formData.append("video", videoFile);
-
-  try {
-    const res = await fetch(BACKEND_URL + "/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      console.error("Upload failed server response:", data);
-      status.textContent = "❌ Upload failed! " + (data.message || data.error || "Check backend or file size.");
+    if (!title || !description || !thumbFile || !videoFile) {
+      alert('Please fill all fields and select both files!');
       return;
     }
 
-    status.textContent = "✅ Upload complete — redirecting to feed...";
-    setTimeout(() => (location.href = "feed.html"), 1200);
-  } catch (err) {
-    console.error("Upload error:", err);
-    status.textContent = "❌ Upload failed! Check backend or file size.";
-  }
-});
+    status.textContent = 'Uploading... (this may take a while)';
+    uploadBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('thumbnail', thumbFile);
+    formData.append('video', videoFile);
+
+    try {
+      const res = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Upload failed');
+      }
+
+      status.textContent = 'Upload successful! Redirecting...';
+      setTimeout(() => location.href = 'feed.html', 1500);
+
+    } catch (err) {
+      console.error('Upload error:', err);
+      status.textContent = `Upload failed: ${err.message}`;
+      uploadBtn.disabled = false;
+    }
+  });
 </script>
+
 </body>
 </html>
-
