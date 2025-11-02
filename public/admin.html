@@ -30,7 +30,7 @@ const videosContainer = document.getElementById('videosContainer');
 
 async function fetchVideos(){
   try {
-    const res = await fetch("https://zapfix-backend-f8km.onrender.com/admin/videos", {
+    const res = await fetch("https://zapfix-live.onrender.com", {
       headers: { "Authorization": `Bearer ${token}` }
     });
     const data = await res.json();
