@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ZapFix — Watch</title>
+  <style>
+    /* ---------- Base ---------- */
+    :root{
+      --sky:#E0F3FF;
+      --blue:#0077ff;
+      --blue-dark:#005cd1;
+      --green:#00b894;
+      --white:#ffffff;
+      --muted:#f2f4f8;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:var(--sky);
+      color:#222;
+    }
+
+    /* ---------- Header ---------- */
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:15px 20px;
+      background:var(--white);
+      box-shadow:0 2px 8px rgba(0,0,0,0.08);
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    .logo{ font-size:24px; font-weight:700; color:var(--blue); cursor:pointer; }
+    .nav-right{ display:flex; align-items:center; gap:10px; }
+
+    .search-bar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:var(--muted);
+      padding:8px 10px;
+      border-radius:10px;
+    }
+    .search-bar input{
+      border:none;
+      background:transparent;
+      outline:none;
+      font-size:14px;
+      width:180px;
+    }
+
+    .btn {
+      border: none;
+      border-radius:10px;
+      padding:8px 12px;
+      font-weight:600;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .btn-upload {
+      background: var(--blue);
+      color: white;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .btn-upload:hover{ background:var(--blue-dark); }
+
+    /* ---------- Main grid ---------- */
+    main{
+      display:grid;
+      grid-template-columns: 2fr 1fr;
+      gap:22px;
+      padding:26px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    /* ---------- Video section ---------- */
+    .video-section{
+      background:var(--white);
+      border-radius:14px;
+      padding:14px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.06);
+    }
+    video{
+      width:100%;
+      border-radius:10px;
+      background:#000;
+      max-height:520px;
+    }
+    .video-title{
+      margin-top:12px;
+      font-size:20px;
+      font-weight:700;
+      color:#111;
+    }
+
+    /* actions row: like left, share right */
+    .video-actions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+    .left-actions{ display:flex; align-items:center; gap:10px; }
+    .right-actions{ display:flex; align-items:center; gap:10px; }
+
+    .btn-like{
+      background:var(--blue);
+      color:white;
+      border-radius:10px;
+      border: none;
+      padding:8px 12px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn-like:hover{ background:var(--blue-dark); }
+
+    .btn-share{
+      background:var(--green);
+      color:white;
+      border: none;
+      border-radius:10px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn-share:hover{ background:#27ae60; }
+
+    /* ---------- Comments ---------- */
+    .comment-section{
+      margin-top:18px;
+      background:#E7F3FF;
+      padding:12px;
+      border-radius:10px;
+    }
+    .comment-section h3{ color:var(--blue); margin:0 0 10px 0; }
+    .comment-box{ display:flex; flex-direction:column; gap:8px; }
+    .comment-box input, .comment-box textarea{
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #cfcfcf;
+      font-size:14px;
+      outline:none;
+      background:white;
+    }
+    .comment-box .btn-post{
+      align-self:flex-end;
+      width:110px;
+      background:var(--blue);
+      color:white;
+      border: none;
+      border-radius:10px;
+      padding:8px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .comments-list{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
+    .comment-item{
+      background:var(--white);
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+    .comment-item strong{ display:block; margin-bottom:6px; }
+
+    /* ---------- Next (suggestions) ---------- */
+    .next-section{
+      background:var(--white);
+      border-radius:12px;
+      padding:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.06);
+      max-height:calc(100vh - 160px);
+      overflow:auto;
+    }
+    .next-title{ text-align:center; color:var(--blue); font-weight:700; margin-bottom:12px; }
+    .suggestion{ display:flex; gap:10px; align-items:center; padding:8px 6px; cursor:pointer; border-radius:8px; transition:background .15s; }
+    .suggestion:hover{ background:#f6fbff; }
+    .suggestion img{ width:110px; height:62px; object-fit:cover; border-radius:8px; }
+    .suggestion .meta{ font-weight:700; color:var(--blue); font-size:14px; }
+
+    /* ---------- small screens ---------- */
+    @media (max-width:900px){
+      main{ grid-template-columns:1fr; padding:16px; }
+      .search-bar input{ width:120px; }
+      .suggestion img{ width:120px; height:72px; }
+      .next-section{ max-height:none; margin-top:18px; }
+      .video-actions{ flex-direction:row; justify-content:space-between; gap:8px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="location.href='feed.html'">ZAPFIX</div>
+
+    <div class="nav-right">
+      <div class="search-bar" title="Search suggestions">
+        <span>🔍</span>
+        <input id="searchInput" placeholder="Search videos..." />
+      </div>
+
+      <!-- Upload button (U2: "Upload Video") -->
+      <button class="btn btn-upload" id="uploadHeaderBtn" title="Upload video">
+          Upload Video
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Video + comments -->
+    <section class="video-section">
+      <video id="player" controls playsinline></video>
+      <div class="video-title" id="videoTitle">Loading...</div>
+
+      <div class="video-actions">
+        <div class="left-actions">
+          <button id="likeBtn" class="btn-like">👍 Like <span id="likeCount" style="margin-left:8px;">0</span></button>
+        </div>
+
+        <div class="right-actions">
+          <button id="shareBtn" class="btn-share">🔗 Share</button>
+        </div>
+      </div>
+
+      <div class="comment-section">
+        <h3>Comments</h3>
+        <div class="comment-box">
+          <input id="commentName" placeholder="Your name" />
+          <textarea id="commentText" rows="3" placeholder="Add a comment..."></textarea>
+          <button id="postComment" class="btn-post">Post</button>
+        </div>
+        <div class="comments-list" id="commentsList"></div>
+      </div>
+    </section>
+
+    <!-- Suggestions -->
+    <aside class="next-section">
+      <div class="next-title">Next Video Suggestions</div>
+      <div id="suggestionsList"></div>
+    </aside>
+  </main>
+
+  <!-- tiny toast for copy -->
+  <div id="toast" style="
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 9999;
+    font-weight:700;
+    ">
+    Link copied
+  </div>
+
+<script>
+(async () => {
+  // ---------- BACKEND URL (change this single line if needed) ----------
+  // Edit this to your deployed backend URL if different.
+  const BACKEND_URL = "https://zapfix-backend-f8km.onrender.com"; // <-- CHANGE HERE if needed
+
+  // ---------- util: read query param id ----------
+  function getQueryParam(name){
+    const url = new URL(location.href);
+    return url.searchParams.get(name);
+  }
+
+  // ---------- elements ----------
+  const player = document.getElementById('player');
+  const videoTitle = document.getElementById('videoTitle');
+  const likeBtn = document.getElementById('likeBtn');
+  const likeCount = document.getElementById('likeCount');
+  const shareBtn = document.getElementById('shareBtn');
+  const suggestionsList = document.getElementById('suggestionsList');
+  const searchInput = document.getElementById('searchInput');
+  const uploadHeaderBtn = document.getElementById('uploadHeaderBtn');
+
+  const commentName = document.getElementById('commentName');
+  const commentText = document.getElementById('commentText');
+  const postComment = document.getElementById('postComment');
+  const commentsList = document.getElementById('commentsList');
+
+  const toast = document.getElementById('toast');
+
+  function showToast(msg = "Copied", ms = 1400){
+    toast.textContent = msg;
+    toast.style.display = "block";
+    setTimeout(()=> toast.style.display = "none", ms);
+  }
+
+  // ---------- load list of videos (for suggestions) ----------
+  let videos = [];
+  async function loadVideos(){
+    try{
+      const res = await fetch(`${BACKEND_URL}/videos`);
+      const json = await res.json();
+      if(json && json.success && Array.isArray(json.videos)){
+        videos = json.videos;
+      } else if(Array.isArray(json)) {
+        videos = json;
+      } else {
+        console.warn("Unexpected /videos response", json);
+        videos = [];
+      }
+    } catch(err){
+      console.error("Error fetching videos:", err);
+      videos = [];
+    }
+  }
+
+  // ---------- determine current video id ----------
+  let videoId = getQueryParam('id');
+
+  // If no id present, fetch list and redirect to first video
+  async function ensureVideoId(){
+    if(videoId) return;
+    await loadVideos();
+    if(videos.length > 0){
+      videoId = videos[0]._id || videos[0].id;
+      location.href = `${location.pathname}?id=${videoId}`;
+    } else {
+      // no videos — show placeholder
+      videoTitle.textContent = "No videos available";
+    }
+  }
+
+  await loadVideos();
+  await ensureVideoId();
+
+  // ---------- load single video details ----------
+  let current = null;
+  async function loadCurrent(){
+    try{
+      const res = await fetch(`${BACKEND_URL}/videos/${videoId}`);
+      const json = await res.json();
+      if(json && json.success && json.video){
+        current = json.video;
+      } else {
+        // as fallback, try to find in previously fetched videos
+        current = videos.find(v => (v._id || v.id) === videoId) || null;
+      }
+    } catch(e){
+      console.error("Error loading current video:", e);
+      current = videos.find(v => (v._id || v.id) === videoId) || null;
+    }
+
+    if(current){
+      player.src = current.video;
+      videoTitle.textContent = current.title || "Untitled";
+      likeCount.textContent = String(current.likes || 0);
+      renderComments(current.comments || []);
+    } else {
+      videoTitle.textContent = "Video not found";
+    }
+  }
+
+  // ---------- render suggestions ----------
+  function renderSuggestions(filter = ""){
+    suggestionsList.innerHTML = "";
+    const query = (filter || "").toLowerCase();
+    const list = videos.filter(v => (v._id || v.id) !== videoId)
+                       .filter(v => (v.title || "").toLowerCase().includes(query));
+    if(list.length === 0){
+      suggestionsList.innerHTML = `<div style="padding:10px;color:#666;text-align:center">No suggestions</div>`;
+      return;
+    }
+    list.forEach(v => {
+      const id = v._id || v.id;
+      const el = document.createElement('div');
+      el.className = 'suggestion';
+      el.innerHTML = `<img src="${v.thumbnail}" alt=""><div class="meta">${escapeHtml(v.title||'Untitled')}</div>`;
+      el.addEventListener('click', ()=> {
+        location.href = `${location.pathname}?id=${id}`;
+      });
+      suggestionsList.appendChild(el);
+    });
+  }
+
+  // ---------- escaping helper ----------
+  function escapeHtml(s){
+    if(!s) return '';
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
+  }
+
+  // ---------- comments rendering (newest first) ----------
+  function renderComments(list){
+    commentsList.innerHTML = "";
+    // newest first:
+    const sorted = (list || []).slice().sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    sorted.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      div.innerHTML = `<strong>${escapeHtml(c.name)}</strong><div>${escapeHtml(c.text)}</div><div style="font-size:12px;color:#666;margin-top:6px">${new Date(c.createdAt).toLocaleString()}</div>`;
+      commentsList.appendChild(div);
+    });
+  }
+
+  // ---------- load comments fresh from backend ----------
+  async function refreshComments(){
+    try{
+      const res = await fetch(`${BACKEND_URL}/videos/${videoId}`);
+      const json = await res.json();
+      if(json && json.success && json.video){
+        current = json.video;
+        renderComments(current.comments || []);
+        likeCount.textContent = String(current.likes || 0);
+      }
+    } catch(e){
+      console.error("refreshComments error", e);
+    }
+  }
+
+  // ---------- POST comment ----------
+  postComment.addEventListener('click', async ()=>{
+    const name = commentName.value.trim();
+    const text = commentText.value.trim();
+    if(!name || !text){ alert("Please enter name and comment"); return; }
+
+    try{
+      const res = await fetch(`${BACKEND_URL}/videos/${videoId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, text })
+      });
+      const json = await res.json();
+      if(json && json.success){
+        // reload comments from server
+        await refreshComments();
+        commentName.value = '';
+        commentText.value = '';
+      } else {
+        alert("Failed to post comment");
+        console.error("Post comment failure:", json);
+      }
+    } catch(e){
+      console.error("Comment post error:", e);
+      alert("Failed to post comment (network)");
+    }
+  });
+
+  // ---------- Like button (server-side increment) ----------
+  likeBtn.addEventListener('click', async ()=>{
+    try{
+      const res = await fetch(`${BACKEND_URL}/videos/${videoId}/like`, { method: 'POST' });
+      const json = await res.json();
+      if(json && json.success){
+        likeCount.textContent = String(json.likes || (parseInt(likeCount.textContent||'0')+1));
+      } else {
+        // fallback to local increment
+        likeCount.textContent = String((parseInt(likeCount.textContent||'0') || 0) + 1);
+      }
+    } catch(e){
+      console.error("Like error:", e);
+      likeCount.textContent = String((parseInt(likeCount.textContent||'0') || 0) + 1);
+    }
+  });
+
+  // ---------- Share button (S-C: native share if available + copy fallback) ----------
+  shareBtn.addEventListener('click', async () => {
+    const shareData = { title: current ? current.title : document.title, url: location.href };
+    // Try native share
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        // no toast necessary — native menu shows
+        return;
+      } catch (err) {
+        // user cancel or error -> fallback to copy
+        console.warn("navigator.share failed:", err);
+      }
+    }
+    // Copy to clipboard fallback
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        showToast("Link copied!");
+      } catch (err) {
+        // fallback to prompt
+        prompt("Copy this link:", location.href);
+      }
+    } else {
+      prompt("Copy this link:", location.href);
+    }
+  });
+
+  // ---------- search to filter suggestions ----------
+  searchInput.addEventListener('input', (e)=>{
+    renderSuggestions(e.target.value);
+  });
+
+  // ---------- upload header button ----------
+  uploadHeaderBtn.addEventListener('click', ()=> location.href = 'upload.html');
+
+  // ---------- initial load ----------
+  await loadCurrent();        // load selected video info
+  renderSuggestions();       // render suggestions list
+  // refresh comments from server (in case current initially came from local)
+  await refreshComments();
+
+})();
+</script>
+</body>
+</html>
+
+
+
+
+
+

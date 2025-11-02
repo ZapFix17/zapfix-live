@@ -1,0 +1,16 @@
+body { font-family:'Poppins',sans-serif; background:#E0F3FF; margin:0; color:#333; }
+header { display:flex; justify-content:space-between; align-items:center; background:white; padding:15px 25px; box-shadow:0 2px 8px rgba(0,0,0,0.1); position:sticky; top:0; z-index:10; }
+header h2{margin:0;}
+header button{background:#0077ff;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;}
+.admin-login-container{max-width:350px;margin:80px auto;text-align:center;background:white;padding:30px;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,0.1);}
+.admin-login-container input{width:100%;padding:10px;margin:10px 0;border-radius:10px;border:1.5px solid #ccc;}
+.admin-login-container button{width:100%;padding:10px;border:none;background:#0077ff;color:white;font-size:16px;border-radius:10px;cursor:pointer;}
+.admin-login-container button:hover{background:#005cd1;}
+.video-card-admin{display:flex;flex-direction:column;background:white;margin:20px;padding:15px;border-radius:12px;box-shadow:0 3px 10px rgba(0,0,0,0.1);}
+.video-card-admin img{width:200px;height:120px;border-radius:8px;}
+.video-card-admin .video-info{margin-top:10px;}
+.video-card-admin input[type=text], .video-card-admin textarea{width:100%;margin:5px 0;padding:8px;border-radius:8px;border:1px solid #ccc;}
+.video-card-admin button{margin:5px 5px 5px 0;padding:6px 12px;border:none;border-radius:8px;background:#00b894;color:white;cursor:pointer;}
+.video-card-admin button:hover{background:#01996b;}
+.commentAdmin{background:#f2f2f2;padding:6px 10px;border-radius:8px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;}
+.commentAdmin button{background:red;color:white;padding:3px 6px;border-radius:5px;border:none;cursor:pointer;}
