@@ -33,7 +33,7 @@
 <div class="video-grid" id="videoGrid"></div>
 
 <script>
-const BACKEND_URL = "https://zapfix-live.onrender.com"; // update if different
+const BACKEND_URL = '';  // Same domain for Render
 const videoGrid = document.getElementById("videoGrid");
 const searchInput = document.getElementById("searchInput");
 let videos = [];
@@ -41,7 +41,7 @@ let videos = [];
 async function fetchVideos() {
   videoGrid.innerHTML = "<p style='color:gray;'>⏳ Loading videos...</p>";
   try {
-    const res = await fetch(BACKEND_URL + "/videos");
+    const res = await fetch('/videos');
     if (!res.ok) throw new Error("Server returned " + res.status);
     const data = await res.json();
     if (!data.success || !Array.isArray(data.videos)) {
@@ -69,7 +69,6 @@ function renderVideos(filter = "") {
     card.className = "video-card";
     card.innerHTML = `<img src="${v.thumbnail}" alt="thumb"><p>${v.title}</p>`;
     card.addEventListener("click", () => {
-      // navigate to watch page with id param
       location.href = `watch.html?id=${v._id}`;
     });
     videoGrid.appendChild(card);
