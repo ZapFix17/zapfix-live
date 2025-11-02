@@ -8,8 +8,9 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import dotenv from 'dotenv';  // ← ADD THIS LINE
 
-dotenv.config();
+dotenv.config();  // ← AND THIS
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -94,12 +95,13 @@ app.get('/api/tools', async (req, res) => {
   }
 });
 
-// Videos Route (for feed.html)
+// VIDEOS ROUTE (for feed.html)
 app.get('/videos', async (req, res) => {
   try {
-    const videos = await Tool.find().sort({ createdAt: -1 });  // Use Tool or create Video model
+    const videos = await Tool.find().sort({ createdAt: -1 });
     res.json({ success: true, videos });
   } catch (err) {
+    console.error('Videos fetch error:', err);
     res.status(500).json({ error: 'Failed to fetch videos' });
   }
 });
@@ -131,7 +133,7 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// Admin Upload (Videos/Tools)
+// Admin Upload (Tools/Videos)
 app.post('/api/admin/upload', verifyJWT, uploadLimiter, upload.fields([
   { name: 'icon' },
   { name: 'thumbnail' },
